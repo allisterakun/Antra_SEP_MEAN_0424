@@ -1,0 +1,102 @@
+form {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+h1 {
+    text-align: center;
+}
+
+.row_container {
+  display: flex;
+  justify-content: space-between;
+  margin: 0.5rem 0;
+}
+
+.item_container {
+  width: 100%;
+  margin: 0 5%;
+}
+
+input {
+  font-size: 16px;
+  width: 100%;
+  padding: 0.5rem 0.5rem;
+  border-radius: 5px;
+  border: 2px solid grey;
+  box-sizing: border-box;
+}
+
+div#first_name, div#password{
+  margin: 0 1% 0 5%;
+}
+
+div#last_name, div#confirm_password{
+  margin: 0 5% 0 1%;
+}
+
+input:focus {
+  border-color: #8EBBE9;
+  outline: none;
+}
+
+div#terms_and_conditions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 0;
+}
+
+div#checkbox {
+  width: 25%;
+  display: flex;
+  align-items: center;
+}
+
+input#checkbox {
+  width: 1em;
+  height: 1em;
+}
+
+p#checkbox {
+  font-weight: bold;
+  margin-left: 0.5rem;
+}
+
+div#terms{
+  flex-direction: right;
+  text-align: left;
+  width: 70%;
+}
+
+span#register_blue_bg {
+  border-radius: 3px;
+  padding: 0.15em 0.5em;
+  background-color: #5589C5;
+  color: white;
+}
+
+div#register_and_signin {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 5% 0 5%;
+}
+
+button {
+  width: 49%;
+  color:white;
+  border: none;
+  border-radius: 5px;
+  padding: 0.75rem;
+  font-size: 16px;
+  margin-top: 0;
+}
+
+button#register {
+  background-color: #5589C5;
+}
+
+button#signin {
+  background-color: #73B666;
+}
