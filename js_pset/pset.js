@@ -145,25 +145,23 @@ function problem20(len) {
     return res;
 }
 
-// function problem21(arr, len) {
-//     var res = []
+function problem21(arr, len) {
+    const res = [];
 
-//     function backtrack(i, curr) {
-//         if (curr.length == len) {
-//             console.log('pushing ' + curr);
-//             res.push(curr);
-//             console.log(res);
-//             return;
-//         }
-//         for (let j=i; j<arr.length; j++){
-//             curr.push(arr[j]);
-//             backtrack(j+1, curr);
-//             curr.pop();
-//         }
-//     }
-//     backtrack(0, []);
-//     return res;
-// }
+    function backtrack(i, curr) {
+        if (curr.length == len) {
+            res.push(curr);
+            return;
+        }
+        for (let j=i; j<arr.length; j++){
+            curr.push(arr[j]);
+            backtrack(j+1, [...curr]);
+            curr.pop();
+        }
+    }
+    backtrack(0, []);
+    return res;
+}
 
 const problem22 = (str, char) => str.split(char).length-1;
 
