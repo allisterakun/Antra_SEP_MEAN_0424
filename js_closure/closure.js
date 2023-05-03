@@ -1,3 +1,9 @@
+/*  
+    Create a function that every time you invoke it, it will print out the message "Congrats you earn the chance!". 
+    However it can only print out the message for the first 5 executions. 
+    All the rest invoke will print out the message "Sorry you missed the chance".
+*/
+
 // a function that takes in n as the threshold, 
 // and returns a function that prints a message depending on if number of calls to the function exceeds the threshold
 const createMsg = function(n) {
