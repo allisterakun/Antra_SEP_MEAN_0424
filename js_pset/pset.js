@@ -18,11 +18,7 @@ const problem5 = (str) => str.split(' ').map(s => s.charAt(0).toUpperCase() + s.
 
 const problem6 = (str) => str.split(' ').reduce((acc, curr) => acc = curr.length > acc.length ? curr : acc, '');
 
-const problem7 = (str) => str.toLowerCase().split('').reduce((acc, curr) => acc = (curr === 'a' || 
-                                                                                   curr === 'e' ||
-                                                                                   curr === 'i' ||
-                                                                                   curr === 'o' ||
-                                                                                   curr === 'u') ? acc+1 : acc, 0);
+const problem7 = (str) => str.toLowerCase().split('').reduce((acc, curr) => acc = ('aeiou'.includes(curr)) ? acc+1 : acc, 0);
 
 function problem8(num) {
     for (let i=2; i<Math.sqrt(num); i++){
