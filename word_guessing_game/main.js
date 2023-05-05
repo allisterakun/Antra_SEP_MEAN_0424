@@ -1,7 +1,6 @@
 const Api = (() => {
     const url = 'https://random-word-api.herokuapp.com/word';
 
-    // const getNewWord = fetch(url).then(res => res.json());
     function getNewWord() {
         return fetch(url).then(res => res.json());
     }
