@@ -78,3 +78,7 @@ header{
 #newGame:hover{
     background-color: #0056B3;
 }
+
+.timer__wrapper{
+    margin-top: 1%;
+}

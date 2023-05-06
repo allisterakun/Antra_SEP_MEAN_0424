@@ -16,7 +16,8 @@ const View = (() => {
         word: '.word__wrapper',
         inputBox: '#inputBox',
         guessHistory: '.guessHistory__wrapper',
-        newGameBtn: '#newGame'
+        newGameBtn: '#newGame',
+        timer: '.timer'
     };
 
     // create template for the incorrect guesses
@@ -49,18 +50,22 @@ const View = (() => {
         const hist_template = create_history_template(newHistory);
         render(historyElement, hist_template);
     }
+    const update_timer = (timerElement, newTime) => {
+        render(timerElement, newTime);
+    }
 
     return {
         domSelector,
         update_chance,
         update_word,
-        update_history
+        update_history,
+        update_timer
     }
 
 })();
 
 const Model = ((View) => {
-    const {domSelector, update_chance, update_word, update_history} = View;
+    const {domSelector, update_chance, update_word, update_history, update_timer} = View;
     const {getNewWord} = Api;
 
     class State {
@@ -133,13 +138,14 @@ const Model = ((View) => {
 
     return {
         State,
-        getNewWord
+        getNewWord,
+        update_timer
     }
 })(View, Api);
 
 const Controller = ((View, Model) => {
     const {domSelector} = View;
-    const {State, getNewWord} = Model;
+    const {State, getNewWord, update_timer} = Model;
 
     var state = new State(incorrectGuesses=0, currentScore=0);
 
@@ -320,16 +326,53 @@ const Controller = ((View, Model) => {
 
 
     // warp all functions
-    const bootstrap = ()=> {
+    const bootstrap = () => {
         guess();
         new_game_click();
         new_game();
     }
 
+    // making this function async to use await
+    const timed_bootstrap = async () => {
+        // init the game as normal
+        bootstrap();
+
+        // id for setIntervel to update timer View
+        let intervalId;
+        // infinite loop
+        while(true){
+            // initialize the timer to 60 and update the View
+            let maxTime = 60;
+            const timer = document.querySelector(domSelector.timer);
+            update_timer(timer, maxTime);
+            // update the time View on page every second
+            intervalId = setInterval(() => {
+                update_timer(timer, --maxTime);
+                // console.log(--timeLeft*1);
+            }, 1000);
+            // wait for a new promise to resolve after 60 seconds (or maxTime) by using setTimeout
+            await new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    resolve();
+                }, maxTime*1000);
+            }).then(() => {
+                // stop the interval that updates the View every second
+                clearInterval(intervalId)
+                // Gameover alert 
+                // -- alerts are blocking in JS, so the new game won't start until OK is clicked
+                alert("Game over! You have guessed " + state.currentScore + " words!");
+                // start a new game and repeat
+                new_game();
+            })
+        }
+    }
+
     return {
-        bootstrap
+        bootstrap,
+        timed_bootstrap
     }
     
 })(View, Model)
 
-Controller.bootstrap();
+// Controller.bootstrap();
+Controller.timed_bootstrap();
