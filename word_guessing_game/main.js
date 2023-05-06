@@ -15,6 +15,7 @@ const View = (() => {
         incorrectGuesses: '.incorrectGuesses__wrapper',
         word: '.word__wrapper',
         inputBox: '#inputBox',
+        guessHistory: '.guessHistory__wrapper',
         newGameBtn: '#newGame'
     };
 
@@ -22,6 +23,14 @@ const View = (() => {
     const create_chance_template = (newChance) => `<span class="incorrectGuesses" id="chances">${newChance} / 10</span>`;
     // create template for the current display word
     const create_word_template = (newWord) => `<span class="word" id="word">${newWord}</span>`;
+
+    const create_history_template = (newHistory) => {
+        if (newHistory.length === 0) return '';
+        let temp = '';
+        newHistory.forEach(ele => temp += `<span class="guessHistory guessHistory--${ele.correct}">${ele.char}</span>`);
+        return temp;
+    }
+
     // function to update the View for the given element with the given template
     const render = (ele, temp) => {
         ele.innerHTML = temp;
@@ -36,17 +45,22 @@ const View = (() => {
         const word_template = create_word_template(newWord);
         render(wordElement, word_template);
     }
+    const update_history = (historyElement, newHistory) => {
+        const hist_template = create_history_template(newHistory);
+        render(historyElement, hist_template);
+    }
 
     return {
         domSelector,
         update_chance,
-        update_word
+        update_word,
+        update_history
     }
 
 })();
 
 const Model = ((View) => {
-    const {domSelector, update_chance, update_word} = View;
+    const {domSelector, update_chance, update_word, update_history} = View;
     const {getNewWord} = Api;
 
     class State {
@@ -104,6 +118,16 @@ const Model = ((View) => {
         }
         set currentScore(newScore) {
             this._currentScore = newScore;
+        }
+        // ._guessHistory
+        get guessHistory() {
+            return this._guessHistory;
+        }
+        set guessHistory(newHistory) {
+            this._guessHistory = newHistory;
+            // update View
+            const guessHistory__wrapper = document.querySelector(domSelector.guessHistory);
+            update_history(guessHistory__wrapper, newHistory);
         }
     }
 
@@ -164,6 +188,7 @@ const Controller = ((View, Model) => {
     //      and update the View
     const new_word = () => {
         newWord = getNewWord().then(word => {
+            state.guessHistory = [];
             state.answer = word[0];
             randomize();
         })
@@ -178,31 +203,8 @@ const Controller = ((View, Model) => {
         new_word();
     }
 
-    // function to handle the correct input char
-    const correct_input = (char) => {
-        // remove current letter from the correct answer list 
-        state.correctInputs = state.correctInputs.filter(val => val !== char);
-
-        // find all occurences
-        const occurences = [];
-        let ind = state.answer.indexOf(char, 0);
-        while(ind >= 0) {
-            occurences.push(ind);
-            ind = state.answer.indexOf(char, ind+1);
-        }
-        // fill all occurences
-        const currDisplayWord = state.displayword.split(' ');
-        for (let i of occurences) {
-            currDisplayWord[i] = char;
-        }
-        const newDisplayWord = currDisplayWord.join(' ');
-        // set displayword and update View
-        state.displayword = newDisplayWord;
-    }
-
-    // function to handle the incorrect/invalid inputs
-    const incorrect_input = () => {
-        // current incorrect guesses
+    const increase_or_newGame = () => {
+        // add one to incorrect guesses if still chances, else end game (and start a new game)
         let curr_guesses = state.incorrectGuesses;
         // if still chances left
         if(curr_guesses < 10) {
@@ -216,6 +218,51 @@ const Controller = ((View, Model) => {
             // start a new game after the message
             new_game();
         }
+    }
+
+    // function to handle the correct input char
+    const correct_input = (guessChar) => {
+        // remove current letter from the correct answer list 
+        state.correctInputs = state.correctInputs.filter(val => val !== guessChar);
+
+        // find all occurences
+        const occurences = [];
+        let ind = state.answer.indexOf(guessChar, 0);
+        while(ind >= 0) {
+            occurences.push(ind);
+            ind = state.answer.indexOf(guessChar, ind+1);
+        }
+        // fill all occurences
+        const currDisplayWord = state.displayword.split(' ');
+        for (let i of occurences) {
+            currDisplayWord[i] = guessChar;
+        }
+        const newDisplayWord = currDisplayWord.join(' ');
+        // set displayword and update View
+        state.displayword = newDisplayWord;
+
+        // add input to input history list
+        state.guessHistory = [...state.guessHistory, {char: guessChar, correct: true}];
+    }
+
+    // function to handle the incorrect/invalid inputs
+    const incorrect_input = (guessChar) => {
+        /* update input history list if needed */
+        // check if guessChar is already in the history list
+        const guessedB4 = state.guessHistory.reduce((res, cur) => (cur.char === guessChar) ? true : res, false);
+        // if not guessed before
+        if (!guessedB4) {
+            // update guessHistory and the View
+            state.guessHistory = [...state.guessHistory, {char: guessChar, correct: false}];
+
+            increase_or_newGame(); 
+        }
+        // else (guessed before)
+        else {
+            // show an alert and do nothing (will not increase the incorrect guesses)
+            alert("You've tried the letter \"" + guessChar + "\" before!");
+        }
+        
     }
 
     // function to take in an user-input character and perform corresponding actions
@@ -234,7 +281,7 @@ const Controller = ((View, Model) => {
         }
         // incorrect input
         else{
-            incorrect_input();
+            incorrect_input(guessChar);
         }
     }
 
@@ -252,7 +299,7 @@ const Controller = ((View, Model) => {
                 // check for valid input
                 if(guessChar.length > 1 || guessChar < 'a' || guessChar > 'z') {
                     alert('Invalid input: Please only type one lowercase letter into the textbox as input.');
-                    incorrect_input();
+                    increase_or_newGame();
                 }
                 else {
                     // if valid input, call make_a_guess for further action

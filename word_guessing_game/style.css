@@ -27,6 +27,25 @@ header{
     /* font-weight: ; */
 }
 
+.guessHistory__wrapper{
+    margin: 0 auto 2% auto;
+    height: 2rem;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.guessHistory{
+    margin: auto 1rem auto 1rem;
+}
+
+.guessHistory--false{
+    color: #FF0000;
+}
+.guessHistory--true{
+    color:#2AC92A;
+}
+
 .inputBox__wrapper{
     margin: 0 auto 1% auto;
 }
