@@ -17,6 +17,7 @@ const View = (() => {
         inputBox: '#inputBox',
         guessHistory: '.guessHistory__wrapper',
         newGameBtn: '#newGame',
+        timer__wrapper: '.timer__wrapper',
         timer: '.timer'
     };
 
@@ -53,28 +54,32 @@ const View = (() => {
     const update_timer = (timerElement, newTime) => {
         render(timerElement, newTime);
     }
+    const delete_timer = (timerWrapper) => {
+        timerWrapper.style.display = 'none';
+    }
 
     return {
         domSelector,
         update_chance,
         update_word,
         update_history,
-        update_timer
+        update_timer,
+        delete_timer
     }
 
 })();
 
 const Model = ((View) => {
-    const {domSelector, update_chance, update_word, update_history, update_timer} = View;
+    const {domSelector, update_chance, update_word, update_history, update_timer, delete_timer} = View;
     const {getNewWord} = Api;
 
     class State {
-        constructor(incorrectGuesses=0, currentScore=0) {
+        constructor() {
             this._answer = '';
             this._diaplayWord = '';
             this._correctInputs = [];
-            this._incorrectGuesses = incorrectGuesses;
-            this._currentScore = currentScore; // keep track of the number of words guessed correctly
+            this._incorrectGuesses = 0;
+            this._currentScore = 0; // keep track of the number of words guessed correctly
             this._guessHistory = [];
         }
 
@@ -139,15 +144,61 @@ const Model = ((View) => {
     return {
         State,
         getNewWord,
-        update_timer
+        update_timer,
+        delete_timer
     }
 })(View, Api);
 
 const Controller = ((View, Model) => {
     const {domSelector} = View;
-    const {State, getNewWord, update_timer} = Model;
+    const {State, getNewWord, update_timer, delete_timer} = Model;
 
-    var state = new State(incorrectGuesses=0, currentScore=0);
+    // global variables that get reassigned when a new game starts
+    var state;
+    var timerInterval;
+    
+    // function to maintain a timer on page
+    const set_timer = (maxTime) => {
+        const timer = document.querySelector(domSelector.timer);
+        // initialize the timer on page to be the maxTime given
+        update_timer(timer, maxTime);
+        // update the timer on page every second
+        timerInterval = setInterval(() => {
+            // if the time limit is reached, end game, start a new game, and reset the timer
+            if (maxTime <= 0) {
+                end_game();
+            }
+            // added an else here to prevent diaplaying 'Time Left: -1' after times up
+            else {
+                update_timer(timer, --maxTime);
+            }
+        }, 1000);
+    }
+    
+    // function to end the game:
+    // - clear the timer if there is time limit
+    // - display score with alert()
+    // - start a new game
+    // - set a new timer if there is a time limit
+    const end_game = () => {
+        const timer__wrapper = document.querySelector(domSelector.timer__wrapper);
+        // with time limit
+        if (timer__wrapper.style.display !== 'none') {
+            clearInterval(timerInterval);
+            // show alert message
+            alert("Game over! You have guessed " + state.currentScore + " words!");
+            // start a new game after the message
+            new_game();
+            // set a new timer
+            set_timer(60);
+        }
+        else {
+            // show alert message
+            alert("Game over! You have guessed " + state.currentScore + " words!");
+            // start a new game after the message
+            new_game();
+        }
+    }
 
     // function to randomly mask a random number of letters of the answer word, and update the view accordingly
     const randomize = () => {
@@ -204,7 +255,7 @@ const Controller = ((View, Model) => {
     //      and reset the number of incorrect guesses
     //      get a new word with the API call and update the View
     const new_game = () => {
-        state = new State(incorrectGuesses=0, currentScore=0);
+        state = new State();
         state.incorrectGuesses = 0;
         new_word();
     }
@@ -219,10 +270,7 @@ const Controller = ((View, Model) => {
         }
         // if no chance left
         else {
-            // show alert message
-            alert("Game over! You have guessed " + state.currentScore + " words!");
-            // start a new game after the message
-            new_game();
+            end_game();
         }
     }
 
@@ -319,72 +367,38 @@ const Controller = ((View, Model) => {
 
         newGameBtn.addEventListener('click', () => {
             // start a new game if the button is pressed
-            new_game();
+            end_game();
         })
+    }
+
+    // function to start a new game and add all the event listeners
+    const init = () => {
+        new_game();
+        guess();
+        new_game_click();
     }
 
 
     // warp all functions
     const bootstrap = () => {
-        guess();
-        new_game_click();
-        new_game();
+        // for games without time limit, set the display of the timer__wrappr to none
+        delete_timer(document.querySelector(domSelector.timer__wrapper));
+
+        init();
     }
 
-    // !!!BUG to fix: new game when timer hasn't expired yet, alert blocking timer count down but not actual setTimeout promise
-    // making this function async to use await
-    const timed_bootstrap = async () => {
-        // init the game as normal
-        bootstrap();
-
-        // id for setIntervel to update timer View
-        let intervalId;
-        // infinite loop
-        while(true){
-            // initialize the timer to 60 and update the View
-            let maxTime = 60;
-            const timer = document.querySelector(domSelector.timer);
-            update_timer(timer, maxTime);
-            // update the time View on page every second
-            intervalId = setInterval(() => {
-                update_timer(timer, --maxTime);
-            }, 1000);
-            // wait for a new promise to resolve after 60 seconds (or maxTime) by using setTimeout
-            await new Promise((resolve, reject) => {
-                setTimeout(() => {
-                    resolve();
-                }, maxTime*1000);
-            }).then(() => {
-                // stop the interval that updates the View every second
-                clearInterval(intervalId)
-                // Gameover alert 
-                // -- alerts are blocking in JS, so the new game won't start until OK is clicked
-                alert("Game over! You have guessed " + state.currentScore + " words!");
-                // start a new game and repeat
-                new_game();
-            })
-        }
-    }
-
-    const timed = () => {
-        bootstrap();
-
-        setInterval(() => {
-            let timeout = setTimeout(() => {}, 15000);
-            alert("Game over! You have guessed " + state.currentScore + " words!");
-            new_game();
-            clearTimeout(timeout);
-        }, 15000);
+    const timed_bootstrap = () => {
+        init();
+        // start a timer
+        set_timer(60);
     }
 
     return {
         bootstrap,
-        timed_bootstrap,
-        timed
+        timed_bootstrap
     }
     
 })(View, Model)
 
-Controller.bootstrap();
-// Controller.timed_bootstrap();
-// Controller.timed();
+// Controller.bootstrap();
+Controller.timed_bootstrap();
