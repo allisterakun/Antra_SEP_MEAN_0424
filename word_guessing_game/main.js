@@ -305,7 +305,6 @@ const Controller = ((View, Model) => {
                 // check for valid input
                 if(guessChar.length > 1 || guessChar < 'a' || guessChar > 'z') {
                     alert('Invalid input: Please only type one lowercase letter into the textbox as input.');
-                    increase_or_newGame();
                 }
                 else {
                     // if valid input, call make_a_guess for further action
@@ -332,6 +331,7 @@ const Controller = ((View, Model) => {
         new_game();
     }
 
+    // !!!BUG to fix: new game when timer hasn't expired yet, alert blocking timer count down but not actual setTimeout promise
     // making this function async to use await
     const timed_bootstrap = async () => {
         // init the game as normal
@@ -348,7 +348,6 @@ const Controller = ((View, Model) => {
             // update the time View on page every second
             intervalId = setInterval(() => {
                 update_timer(timer, --maxTime);
-                // console.log(--timeLeft*1);
             }, 1000);
             // wait for a new promise to resolve after 60 seconds (or maxTime) by using setTimeout
             await new Promise((resolve, reject) => {
@@ -367,12 +366,25 @@ const Controller = ((View, Model) => {
         }
     }
 
+    const timed = () => {
+        bootstrap();
+
+        setInterval(() => {
+            let timeout = setTimeout(() => {}, 15000);
+            alert("Game over! You have guessed " + state.currentScore + " words!");
+            new_game();
+            clearTimeout(timeout);
+        }, 15000);
+    }
+
     return {
         bootstrap,
-        timed_bootstrap
+        timed_bootstrap,
+        timed
     }
     
 })(View, Model)
 
-// Controller.bootstrap();
-Controller.timed_bootstrap();
+Controller.bootstrap();
+// Controller.timed_bootstrap();
+// Controller.timed();
